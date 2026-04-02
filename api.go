@@ -74,10 +74,10 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type returnVals struct {
-		Valid bool `json:"valid"`
+		CleanedBody string `json:"cleaned_body"`
 	}
 	respBody := returnVals{
-		Valid: true,
+		CleanedBody: filterProfanity(params.Body),
 	}
 
 	respondWithJSON(w, 200, respBody)

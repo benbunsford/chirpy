@@ -12,6 +12,7 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
+	platform       string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -33,6 +34,17 @@ func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 	cfg.fileserverHits.Store(0)
+
+	if cfg.platform != "dev" {
+		respondWithError(w, 403, "Forbidden")
+	}
+
+	err := cfg.db.Reset(r.Context())
+	if err != nil {
+		respondWithError(w, 500, "Server Error: Error resetting database.")
+	}
+
+	respondWithJSON(w, 200, http.StatusOK)
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {

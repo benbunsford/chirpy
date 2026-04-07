@@ -36,22 +36,31 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 	cfg.fileserverHits.Store(0)
 
 	if cfg.platform != "dev" {
-		respondWithError(w, http.StatusForbidden, "Forbidden")
+		respondWithError(w, http.StatusForbidden, "Forbidden", nil)
+		return
 	}
 
 	err := cfg.db.Reset(r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Server Error: Error resetting database.")
+		respondWithError(w, http.StatusInternalServerError, "Server Error: Error resetting database", err)
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, http.StatusOK)
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
+	if err != nil {
+		log.Println(err)
+	}
+
+	if code > 499 {
+		log.Printf("Responding with 5XX error: %s", msg)
+	}
+
 	type errorVals struct {
 		Error string `json:"error"`
 	}
-
 	respondWithJSON(w, code, errorVals{Error: msg})
 }
 
@@ -59,7 +68,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload any) {
 	data, err := json.Marshal(payload)
 	if err != nil {
 		log.Printf("Error marshalling JSON: %s", err)
-		respondWithError(w, http.StatusInternalServerError, "Server Error: Error marshalling JSON.")
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 

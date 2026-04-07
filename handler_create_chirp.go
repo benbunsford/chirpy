@@ -18,13 +18,13 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding parameters: %s", err)
-		respondWithError(w, http.StatusInternalServerError, "Server Error: Error decoding parameters.")
+		respondWithError(w, http.StatusInternalServerError, "Server Error: Error decoding parameters.", err)
 		return
 	}
 
 	validChirp, err := validateChirp(&params.Body)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, err.Error())
+		respondWithError(w, http.StatusBadRequest, err.Error(), err)
 	}
 
 	dbChirpParams := database.CreateChirpParams{
@@ -34,7 +34,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 
 	dbChirp, err := cfg.db.CreateChirp(r.Context(), dbChirpParams)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Server Error: Error adding chirp to database.")
+		respondWithError(w, http.StatusInternalServerError, "Server Error: Error adding chirp to database.", err)
 	}
 
 	chirp := Chirp{

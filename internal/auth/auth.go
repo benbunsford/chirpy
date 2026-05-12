@@ -12,3 +12,12 @@ func HashPassword(pw string) (string, error) {
 
 	return hashed_pw, nil
 }
+
+func CheckPasswordHash(pw, hash string) (bool, error) {
+	result, err := argon2id.ComparePasswordAndHash(pw, hash)
+	if err != nil {
+		return false, err
+	}
+
+	return result, nil
+}

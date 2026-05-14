@@ -1,11 +1,15 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/alexedwards/argon2id"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"time"
 )
 
 func HashPassword(pw string) (string, error) {
@@ -59,4 +63,21 @@ func ValidateJWT(tokenString, tokenSecret string) (uuid.UUID, error) {
 	}
 
 	return convertedID, nil
+}
+
+func GetBearerToken(headers http.Header) (string, error) {
+	header := headers.Get("Authorization")
+	if header == "" {
+		return "", errors.New("malformed authorization header")
+	}
+
+	if strings.HasPrefix(header, "Bearer") {
+		token := strings.TrimSpace(strings.TrimPrefix(header, "Bearer"))
+		if token == "" {
+			return "", errors.New("malformed authorization header")
+		}
+		return token, nil
+	}
+
+	return "", errors.New("malformed authorization header")
 }

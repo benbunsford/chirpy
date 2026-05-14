@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/google/uuid"
+	"net/http"
 	"testing"
 	"time"
 )
@@ -29,7 +30,7 @@ func TestAuth(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			match, err := CheckPasswordHash(tc.pw, tc.hash)
 			if (err != nil) != tc.wantErr {
-				t.Errorf("CheckPasswordHash() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("CheckPasswordHash() error = %v, wantErr = %v", err, tc.wantErr)
 			}
 			if !tc.wantErr && match != tc.matchPassword {
 				t.Errorf("CheckPasswordHash() expects %v, got %v", tc.matchPassword, match)
@@ -61,7 +62,7 @@ func TestJWT(t *testing.T) {
 
 			validatedID, err := ValidateJWT(token, tc.validatingSecret)
 			if (err != nil) != tc.wantErr {
-				t.Errorf("ValidateJWT() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("ValidateJWT() error = %v, wantErr = %v", err, tc.wantErr)
 			}
 			if tc.wantErr && validatedID != uuid.Nil {
 				t.Errorf("ValidateJWT() should return a nil uuid on error, instead returned %v", validatedID)
@@ -71,4 +72,30 @@ func TestJWT(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := map[string]struct {
+		header  http.Header
+		wantErr bool
+	}{
+		"normal":           {header: http.Header{"Authorization": []string{"Bearer abc"}}, wantErr: false},
+		"extra whitespace": {header: http.Header{"Authorization": []string{"Bearer    abc   "}}, wantErr: false},
+		"empty header":     {header: http.Header{"Authorization": []string{""}}, wantErr: true},
+		"missing bearer":   {header: http.Header{"Authorization": []string{"abc"}}, wantErr: true},
+		"missing header":   {header: http.Header{}, wantErr: true},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			token, err := GetBearerToken(tc.header)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("GetBearerToken() error = %v, wantErr = %v", err, tc.wantErr)
+			}
+			if !tc.wantErr && token != "abc" {
+				t.Errorf("GetBearerToken() expects abc, got %v", token)
+			}
+		})
+	}
+
 }

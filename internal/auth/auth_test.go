@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"github.com/google/uuid"
 	"testing"
+	"time"
 )
 
 func TestAuth(t *testing.T) {
@@ -31,6 +33,41 @@ func TestAuth(t *testing.T) {
 			}
 			if !tc.wantErr && match != tc.matchPassword {
 				t.Errorf("CheckPasswordHash() expects %v, got %v", tc.matchPassword, match)
+			}
+		})
+	}
+}
+
+func TestJWT(t *testing.T) {
+	id := uuid.New()
+	rightSecret := "123"
+	wrongSecret := "1234"
+
+	tests := map[string]struct {
+		id               uuid.UUID
+		signingSecret    string
+		validatingSecret string
+		expiresIn        time.Duration
+		wantErr          bool
+	}{
+		"success":      {id: id, signingSecret: rightSecret, validatingSecret: rightSecret, expiresIn: 1 * time.Second, wantErr: false},
+		"expired":      {id: id, signingSecret: rightSecret, validatingSecret: rightSecret, expiresIn: -1 * time.Second, wantErr: true},
+		"wrong secret": {id: id, signingSecret: rightSecret, validatingSecret: wrongSecret, expiresIn: 1 * time.Second, wantErr: true},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			token, _ := MakeJWT(tc.id, tc.signingSecret, tc.expiresIn)
+
+			validatedID, err := ValidateJWT(token, tc.validatingSecret)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("ValidateJWT() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if tc.wantErr && validatedID != uuid.Nil {
+				t.Errorf("ValidateJWT() should return a nil uuid on error, instead returned %v", validatedID)
+			}
+			if !tc.wantErr && tc.id != validatedID {
+				t.Errorf("ValidateJWT() expected to return %v, instead returned %v", tc.id, validatedID)
 			}
 		})
 	}

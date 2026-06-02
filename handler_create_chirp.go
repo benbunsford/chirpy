@@ -2,20 +2,35 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/benbunsford/chirpy/internal/database"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
+
+	"github.com/benbunsford/chirpy/internal/auth"
+	"github.com/benbunsford/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Body   string    `json:"body"`
-		UserID uuid.UUID `json:"user_id"`
+		Body string `json:"body"`
 	}
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		log.Printf("Error retrieving token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "Error: Error retrieving token.", err)
+		return
+	}
+
+	id, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		log.Printf("Error validating token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "Error: Error validating token.", err)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding parameters: %s", err)
 		respondWithError(w, http.StatusInternalServerError, "Server Error: Error decoding parameters.", err)
@@ -29,7 +44,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 
 	dbChirpParams := database.CreateChirpParams{
 		Body:   validChirp,
-		UserID: params.UserID,
+		UserID: id,
 	}
 
 	dbChirp, err := cfg.db.CreateChirp(r.Context(), dbChirpParams)

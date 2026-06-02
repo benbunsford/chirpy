@@ -32,6 +32,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             database.New(dbConn),
 		platform:       os.Getenv("PLATFORM"),
+		secret:         os.Getenv("SECRET"),
 	}
 
 	mux := http.NewServeMux()

@@ -6,8 +6,8 @@ import (
 )
 
 func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
-	chirpIDstring := r.PathValue("ID")
-	chirpID, err := uuid.Parse(chirpIDstring)
+	chirpIdString := r.PathValue("ID")
+	chirpID, err := uuid.Parse(chirpIdString)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "The provided path parameter is not a valid uuid.", err)
 		return

@@ -1,0 +1,47 @@
+package main
+
+import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"github.com/google/uuid"
+	"log"
+	"net/http"
+)
+
+func (cfg *apiConfig) handlerUpgradeUserToChirpyRed(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Event string
+		Data  struct {
+			UserId uuid.UUID `json:"user_id"`
+		}
+	}
+
+	params := parameters{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Error decoding request body: %s", err)
+		return
+	}
+
+	log.Printf("%v", params)
+
+	if params.Event != "user.upgraded" {
+		respondWithJSON(w, http.StatusNoContent, nil)
+		return
+	}
+
+	_, err = cfg.db.UpgradeUserToChirpyRed(r.Context(), params.Data.UserId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found", err)
+			return
+		}
+		log.Printf("Error upgrading user: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error upgrading user: %s", err)
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, nil)
+}

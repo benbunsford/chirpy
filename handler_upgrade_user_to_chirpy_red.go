@@ -4,12 +4,23 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"github.com/benbunsford/chirpy/internal/auth"
 	"github.com/google/uuid"
-	"log"
 	"net/http"
 )
 
 func (cfg *apiConfig) handlerUpgradeUserToChirpyRed(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Malformed request header", err)
+		return
+	}
+
+	if apiKey != cfg.polka_key {
+		respondWithError(w, http.StatusUnauthorized, "API Key mismatch", err)
+		return
+	}
+
 	type parameters struct {
 		Event string
 		Data  struct {
@@ -19,13 +30,11 @@ func (cfg *apiConfig) handlerUpgradeUserToChirpyRed(w http.ResponseWriter, r *ht
 
 	params := parameters{}
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Error decoding request body: %s", err)
 		return
 	}
-
-	log.Printf("%v", params)
 
 	if params.Event != "user.upgraded" {
 		respondWithJSON(w, http.StatusNoContent, nil)
@@ -38,7 +47,6 @@ func (cfg *apiConfig) handlerUpgradeUserToChirpyRed(w http.ResponseWriter, r *ht
 			respondWithError(w, http.StatusNotFound, "User not found", err)
 			return
 		}
-		log.Printf("Error upgrading user: %s", err)
 		respondWithError(w, http.StatusInternalServerError, "Error upgrading user: %s", err)
 		return
 	}

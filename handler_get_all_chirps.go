@@ -4,10 +4,12 @@ import (
 	"github.com/benbunsford/chirpy/internal/database"
 	"github.com/google/uuid"
 	"net/http"
+	"sort"
 )
 
 func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
 	authorId := r.URL.Query().Get("author_id")
+	sorting := r.URL.Query().Get("sort")
 
 	var dbChirps []database.Chirp
 	var err error
@@ -43,6 +45,13 @@ func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request
 
 		chirps = append(chirps, chirp)
 	}
+
+	sort.Slice(chirps, func(i, j int) bool {
+		if sorting == "desc" {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
+		}
+		return chirps[i].CreatedAt.Before(chirps[j].CreatedAt)
+	})
 
 	respondWithJSON(w, http.StatusOK, chirps)
 }

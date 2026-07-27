@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/benbunsford/chirpy/internal/auth"
-	"github.com/benbunsford/chirpy/internal/database"
+	"github.com/ben-rw/chirpy/internal/auth"
+	"github.com/ben-rw/chirpy/internal/database"
 	"log"
 	"net/http"
 )

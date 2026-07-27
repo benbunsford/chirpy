@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/benbunsford/chirpy/internal/auth"
+	"github.com/ben-rw/chirpy/internal/auth"
 	"github.com/google/uuid"
 	"net/http"
 )

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/benbunsford/chirpy/internal/database"
+	"github.com/ben-rw/chirpy/internal/database"
 	"log"
 	"net/http"
 	"sync/atomic"

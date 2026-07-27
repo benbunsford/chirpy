@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/benbunsford/chirpy/internal/auth"
+	"github.com/ben-rw/chirpy/internal/auth"
 	"log"
 	"net/http"
 )

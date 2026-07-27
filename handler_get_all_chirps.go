@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/benbunsford/chirpy/internal/database"
+	"github.com/ben-rw/chirpy/internal/database"
 	"github.com/google/uuid"
 	"net/http"
 	"sort"

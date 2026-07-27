@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/benbunsford/chirpy/internal/auth"
-	"github.com/benbunsford/chirpy/internal/database"
+	"github.com/ben-rw/chirpy/internal/auth"
+	"github.com/ben-rw/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
